@@ -5,6 +5,8 @@ import { resolve } from 'node:path';
 import type { AppDeps } from './services.js';
 import { registerAuth } from './auth.js';
 import { registerMe } from './routes/me.js';
+import { registerPlaces } from './routes/places.js';
+import { registerCal } from './routes/cal.js';
 
 const CSP = [
   "default-src 'self'",
@@ -48,6 +50,8 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
 
   registerAuth(app, deps);
   registerMe(app, deps);
+  registerPlaces(app, deps);
+  registerCal(app, deps);
 
   const root = deps.webRoot === undefined ? resolve('dist/web') : deps.webRoot;
   if (root && existsSync(root)) {
