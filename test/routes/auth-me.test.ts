@@ -53,6 +53,15 @@ describe('auth + /api/me', () => {
     const single = loadConfig({ ...base, SINGLE_USER_LOGIN: 'solo@example.com' }, 'config');
     expect(resolveLogin({ 'tailscale-user-login': 'attacker@example.com', 'tailscale-user-name': 'X' }, single)).toEqual({ login: 'solo@example.com', name: 'solo@example.com' });
   });
+  it('percent-encoded paths cannot route to /api handlers around the auth check', async () => {
+    const { app, deps } = await makeTestApp();
+    for (const url of ['/%61pi/me', '/%61pi/status', '/%61pi/geocode?q=wrigley', '/%61%70%69/places']) {
+      expect((await app.inject({ method: 'GET', url })).statusCode, url).toBe(401);
+      expect((await app.inject({ method: 'GET', url, headers: asUser('stranger@x') })).statusCode, url).toBe(403);
+    }
+    expect((await app.inject({ method: 'GET', url: '/%61pi/me', headers: asUser(OWNER) })).json().login).toBe(OWNER);
+    expect(deps.store.listUsers().map((u) => u.login)).toEqual([OWNER]);
+  });
   it('X-Forwarded-For is not trusted (trustProxy off)', async () => {
     const { app } = await makeTestApp();
     app.get('/__ip', async (req) => ({ ip: req.ip }));

@@ -25,7 +25,9 @@ export const isOwner = (user: User, cfg: AppConfig): boolean => user.login === c
 export function registerAuth(app: FastifyInstance, deps: AppDeps): void {
   app.decorateRequest('user', null as unknown as User);
   app.addHook('preHandler', async (req, reply) => {
-    if (!req.url.startsWith('/api/')) return;
+    // Guard on the matched route pattern, not the raw URL: the router decodes percent-escapes,
+    // so '/%61pi/me' reaches the '/api/me' handler while req.url does not start with '/api/'.
+    if (!(req.routeOptions.url ?? '').startsWith('/api/')) return;
     const who = resolveLogin(req.headers, deps.cfg);
     if (!who) return reply.code(401).send({ error: 'No Tailscale identity on request' });
     if (!deps.cfg.allowedLogins.includes(who.login)) return reply.code(403).send({ error: 'Not allowed' });
