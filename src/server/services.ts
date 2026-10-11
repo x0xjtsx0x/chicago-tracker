@@ -9,6 +9,7 @@ export interface Services {
   plows(bbox: BBox): Promise<Plow[]>;
   refreshNow(): Promise<{ ok: string[]; failed: { name: string; error: string }[] }>;
   sendTestPush(user: User): Promise<void>;
+  checkVehicles(): Promise<void>;
 }
 
 export interface AppDeps {

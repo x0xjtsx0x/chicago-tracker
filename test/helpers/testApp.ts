@@ -13,6 +13,7 @@ export const stubServices = (): Services => ({
   plows: async () => [],
   refreshNow: async () => ({ ok: [], failed: [] }),
   sendTestPush: async () => {},
+  checkVehicles: async () => {},
 });
 
 export async function makeTestApp(overrides: Partial<AppDeps> = {}, env: Record<string, string> = {}) {
