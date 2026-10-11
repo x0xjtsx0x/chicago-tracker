@@ -9,6 +9,7 @@ import { registerPlaces } from './routes/places.js';
 import { registerCal } from './routes/cal.js';
 import { registerParking } from './routes/parking.js';
 import { registerStatus } from './routes/status.js';
+import { registerWatch } from './routes/watch.js';
 
 const CSP = [
   "default-src 'self'",
@@ -56,6 +57,7 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   registerCal(app, deps);
   registerParking(app, deps);
   registerStatus(app, deps);
+  registerWatch(app, deps);
 
   const root = deps.webRoot === undefined ? resolve('dist/web') : deps.webRoot;
   if (root && existsSync(root)) {
