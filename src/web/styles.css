@@ -43,3 +43,6 @@ label { display: block; margin: 8px 0 4px; font-weight: 600; }
   .sheet-backdrop { align-items: center; } .sheet { border-radius: 16px; }
   .map { height: 70vh; }
 }
+label.row { font-weight: 400; flex-wrap: nowrap; justify-content: flex-start; }
+label.row > input[type="checkbox"] { flex: 0 0 auto; width: 24px; height: 24px; min-height: 0; margin: 10px 4px 10px 0; }
+label.row > :not(input) { flex: 0 1 auto; }
