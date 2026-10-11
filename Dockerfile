@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
-# <DIGEST> is a placeholder: the deployer resolves it once and substitutes it in both FROM lines:
+# Base image pinned by its multi-arch index digest (resolved 2026-10-11). To re-pin, resolve it and substitute in both FROM lines:
 #   docker buildx imagetools inspect node:24-bookworm-slim --format '{{json .Manifest.Digest}}'
-FROM node:24-bookworm-slim@<DIGEST> AS build
+FROM node:24-bookworm-slim@sha256:d6aa754f16b3197301076f047b5def2f02ea1dbbc2ca920407d46d7ec7f87b20 AS build
 RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY package.json package-lock.json ./
@@ -9,7 +9,7 @@ RUN npm ci
 COPY . .
 RUN npm run build && npm prune --omit=dev
 
-FROM node:24-bookworm-slim@<DIGEST>
+FROM node:24-bookworm-slim@sha256:d6aa754f16b3197301076f047b5def2f02ea1dbbc2ca920407d46d7ec7f87b20
 # Inside the container the app listens on all interfaces; compose decides which host address publishes it.
 ENV NODE_ENV=production PORT=8787 HOST=0.0.0.0 DATA_DIR=/data
 WORKDIR /app
