@@ -8,9 +8,12 @@ export interface DatasetsConfig {
   socrata: {
     sweepSchedule: string; sweepZones: string; permitsClosures: string; permitsCurrent: string;
     permitsBlockParty: string; permitsFilming: string; specialEvents: string; permitZones: string;
-    towed: string; relocated: string; requests311: string;
+    towed: string; relocated: string; requests311: string; snowRoutes: string;
   };
-  sweepingYear: number; snowRouteSource: string; closureRedPattern: string; sundayHoursVerified: boolean;
+  sweepingYear: number;
+  /** 'socrata:<id>' mirrors the Socrata snow-ban dataset; anything else uses ArcGIS layers.snowRoutes. */
+  snowRouteSource: string;
+  closureRedPattern: string; sundayHoursVerified: boolean;
 }
 interface TierCfg { hourly: number; hoursText: string }
 export interface RatesConfig {

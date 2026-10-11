@@ -13,10 +13,14 @@
     "permitZones": "u9xt-hiju",
     "towed": "ygr5-vcbg",
     "relocated": "5k2z-suxx",
-    "requests311": "v6vf-nfxy"
+    "requests311": "v6vf-nfxy",
+    "snowRoutes": "i6k4-giaj"
   },
   "sweepingYear": 2026,
-  "snowRouteSource": "arcgis:50 (UNVERIFIED as 2-inch ban streets — see spec §2.1)",
-  "closureRedPattern": "full|curb|lane|partial|street",
-  "sundayHoursVerified": false
+  "snowRouteSource": "socrata:i6k4-giaj",
+  "snowRouteSourceNote": "Snow Route Parking Restrictions (144 segments, 609 mi, every row restrict_t = '2 INCH'); the city's 2-inch ban list. ArcGIS layer 50 'Main Snow Routes' is 1,815 mi of plow routes, not the ban. See docs/DATA-FACTS.md.",
+  "closureRedPattern": "^(full|curb|partial|intermit)",
+  "closureRedPatternNote": "streetclosure values on 2026-10-11: Curblane, Full, Partial, Intermitte, Sidewalk. Sidewalk never matches.",
+  "sundayHoursVerified": true,
+  "sundayHoursNote": "SUNDAY_HOURS=Y means meters are enforced on Sundays (Loop/CBD and the opt-out retail strips); N means free Sundays. See docs/DATA-FACTS.md."
 }
