@@ -5,7 +5,7 @@ import { buildParking } from '../domain/parking.js';
 import { matchPermitZones } from '../domain/permitZones.js';
 import { sweepIndexFor } from '../domain/sweeping.js';
 
-const CHI = { minLat: 41.62, maxLat: 42.03, minLon: -87.95, maxLon: -87.52 };
+export const CHI = { minLat: 41.62, maxLat: 42.03, minLon: -87.95, maxLon: -87.52 };
 export const AT_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/;
 
 export function registerParking(app: FastifyInstance, deps: AppDeps): void {

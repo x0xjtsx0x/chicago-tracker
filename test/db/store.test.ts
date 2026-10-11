@@ -52,3 +52,29 @@ describe('store', () => {
     s.markNotified(u.id, 'k1', 't'); expect(s.wasNotified(u.id, 'k1')).toBe(true);
   });
 });
+
+import Database from 'better-sqlite3';
+import { mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join as pjoin } from 'node:path';
+import { describe as d2, it as i2, expect as e2 } from 'vitest';
+import { openStore as open2 } from '../../src/server/db/store.js';
+
+d2('store migration (pre-UI-overhaul database)', () => {
+  i2('adds vehicle make/color and vehicle_status.extra to an existing DB without losing rows', () => {
+    const file = pjoin(mkdtempSync(pjoin(tmpdir(), 'ct-mig-')), 'old.db');
+    const old = new Database(file);
+    old.exec(`CREATE TABLE users (id INTEGER PRIMARY KEY, login TEXT NOT NULL UNIQUE, name TEXT NOT NULL, cal_token TEXT NOT NULL UNIQUE, nav_app TEXT NOT NULL DEFAULT 'apple', ntfy_topic TEXT NOT NULL, notify_prefs TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT (datetime('now')));
+      CREATE TABLE vehicles (id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, plate TEXT NOT NULL, state TEXT NOT NULL, nickname TEXT NOT NULL DEFAULT '');
+      CREATE TABLE vehicle_status (vehicle_id INTEGER PRIMARY KEY REFERENCES vehicles(id) ON DELETE CASCADE, checked_at TEXT NOT NULL, ok INTEGER NOT NULL, matches TEXT NOT NULL, error TEXT);
+      INSERT INTO users (id, login, name, cal_token, ntfy_topic, notify_prefs) VALUES (1, 'o', 'o', 'tok', 'topic', '{}');
+      INSERT INTO vehicles (id, user_id, plate, state, nickname) VALUES (1, 1, 'ABC1234', 'IL', 'Car');
+      INSERT INTO vehicle_status VALUES (1, '2026-10-01T10:00:00', 1, '[]', NULL);`);
+    old.close();
+    const s = open2(file);
+    e2(s.listVehicles(1)).toEqual([{ id: 1, userId: 1, plate: 'ABC1234', state: 'IL', nickname: 'Car', make: '', color: '' }]);
+    e2(s.getVehicleStatus(1)).toMatchObject({ ok: true, matches: [], search: null, older: [], otherState: [] });
+    s.close();
+    open2(file).close(); // idempotent on a second start
+  });
+});

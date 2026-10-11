@@ -3,8 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#0b5394" />
+  <meta name="theme-color" content="#f5f6f8" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#101418" media="(prefers-color-scheme: dark)" />
+  <meta name="color-scheme" content="light dark" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Chi Tracker" />
   <link rel="apple-touch-icon" href="/icon-192.png" />
   <link rel="manifest" href="/manifest.webmanifest" />
@@ -12,10 +16,12 @@
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
+  <a class="skip" href="#view">Skip to content</a>
   <nav class="tabs" aria-label="Main">
-    <a href="#/home" data-route="home"><span aria-hidden="true">🏠</span>Home</a>
-    <a href="#/park" data-route="park"><span aria-hidden="true">🅿️</span>Park</a>
-    <a href="#/settings" data-route="settings"><span aria-hidden="true">⚙️</span>Settings</a>
+    <div class="brand" aria-hidden="true"><span class="brand-mark"></span><span class="brand-name">Chicago<br />Tracker</span></div>
+    <a href="#/home" data-route="home" data-icon="home"><span>Home</span></a>
+    <a href="#/park" data-route="park" data-icon="park"><span>Park</span></a>
+    <a href="#/settings" data-route="settings" data-icon="settings"><span>Settings</span></a>
   </nav>
   <main id="view" tabindex="-1"></main>
   <script type="module" src="./main.ts"></script>

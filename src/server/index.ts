@@ -10,7 +10,7 @@ import { createGeocoder } from './sources/nominatim.js';
 import { createParcelFetcher } from './sources/parcels.js';
 import { createPlowFetcher } from './sources/plows.js';
 import { createNws } from './sources/nws.js';
-import { checkVehicles } from './jobs/vehicleJob.js';
+import { checkVehicle, checkVehicles } from './jobs/vehicleJob.js';
 import { refresh311 } from './jobs/requests311Job.js';
 import { refreshWinter } from './jobs/winterJob.js';
 import { publishNtfy } from './notify/ntfy.js';
@@ -45,6 +45,7 @@ async function main() {
     plows: createPlowFetcher({ fetchJson, cfg }),
     refreshNow,
     checkVehicles: singleFlight(() => checkVehicles({ fetchJson, cfg, store, nowLocal })),
+    checkVehicle: (v) => checkVehicle({ fetchJson, cfg, store, nowLocal }, v),
     sendTestPush: async (user) => {
       if (!cfg.ntfyUrl) throw new Error('Push is disabled (NTFY_URL is empty)');
       await publish(user.ntfyTopic, { title: '✅ Chicago Tracker test', message: 'Push notifications are working.', priority: 'default', click: `${cfg.publicBaseUrl}/#/settings` });

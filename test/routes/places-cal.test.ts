@@ -49,4 +49,24 @@ describe('places + sweeping + calendar', () => {
     expect((await app.inject({ method: 'POST', url: '/api/places', headers: asUser(OWNER), payload: { kind: 'home', label: 'x', address: 'nowhere' } })).statusCode).toBe(422);
     expect((await app.inject({ method: 'POST', url: '/api/places', headers: asUser(OWNER), payload: { kind: 'boat', label: 'x', address: 'y' } })).statusCode).toBe(400);
   });
+  it('saves the exact point the user confirmed (no re-geocode) with zones picked from the candidates', async () => {
+    let geocodes = 0;
+    const t = await makeTestApp({ services: { ...stubServices(), geocode: async () => { geocodes++; return [{ label: 'elsewhere', lat: 41.95, lon: -87.7 }]; } } });
+    t.deps.store.saveDataset('sweepZones', [zone('2701', -87.650, -87.647), zone('2702', -87.647, -87.640)], 2, 't');
+    t.deps.store.saveDataset('sweepSchedule', [{ wardSection: '2701', month: 10, days: [14] }], 1, 't');
+    t.deps.cache.reload();
+    const { app } = t;
+    const zones = (await app.inject({ method: 'GET', url: '/api/zones?lat=41.885&lon=-87.647', headers: asUser(OWNER) })).json();
+    expect(zones.candidates.map((c: any) => c.wardSection).sort()).toEqual(['2701', '2702']);
+    expect(zones.candidates[0].polygon[0][0].length).toBeGreaterThan(3);
+    expect(zones.candidates.find((c: any) => c.wardSection === '2701').next).toEqual(['2026-10-14']);
+    expect((await app.inject({ method: 'GET', url: '/api/zones?lat=40&lon=-87.647', headers: asUser(OWNER) })).statusCode).toBe(400);
+    const base = { kind: 'home', label: 'Home', address: '730 W Randolph St, Chicago', lat: 41.885, lon: -87.647 };
+    expect((await app.inject({ method: 'POST', url: '/api/places', headers: asUser(OWNER), payload: { ...base, zones: ['9999'] } })).statusCode).toBe(400);
+    expect((await app.inject({ method: 'POST', url: '/api/places', headers: asUser(OWNER), payload: { ...base, lat: 40.7 } })).statusCode).toBe(400);
+    const r = await app.inject({ method: 'POST', url: '/api/places', headers: asUser(OWNER), payload: { ...base, zones: ['2702'] } });
+    expect(r.statusCode).toBe(201);
+    expect(r.json().place).toMatchObject({ address: '730 W Randolph St, Chicago', lat: 41.885, lon: -87.647, zones: ['2702'] });
+    expect(geocodes).toBe(0);
+  });
 });

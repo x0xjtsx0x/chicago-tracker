@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { fmtRate, fmtDistance, fmtDate, daysUntil, chicagoToday, isWinterMonth } from '../../src/web/format.js';
+import { fmtRate, fmtDistance, fmtDate, daysUntil, chicagoToday, isWinterMonth, fmtTime, fmtAgo, countdownText } from '../../src/web/format.js';
 
 describe('format', () => {
   it('rate is approximate', () => expect(fmtRate({ tier: 'neighborhood', hourly: 2.5, hoursText: '', approximate: true })).toBe('≈ $2.50/hr'));
@@ -13,5 +13,16 @@ describe('format', () => {
     expect(chicagoToday(new Date('2026-10-12T04:30:00Z'))).toBe('2026-10-11');
     expect(isWinterMonth('2026-12-01')).toBe(true);
     expect(isWinterMonth('2026-10-01')).toBe(false);
+  });
+  it('times and relative ages (Chicago-local strings)', () => {
+    expect(fmtTime('2026-10-11T17:42:00')).toBe('5:42 PM');
+    expect(fmtTime('2026-10-11T00:05:00')).toBe('12:05 AM');
+    expect(fmtAgo('2026-10-11T17:42:00', '2026-10-11T17:42:30')).toBe('just now');
+    expect(fmtAgo('2026-10-11T17:00:00', '2026-10-11T17:42:00')).toBe('42 min ago');
+    expect(fmtAgo('2026-10-11T12:00:00', '2026-10-11T17:42:00')).toBe('5 h ago');
+    expect(fmtAgo(null)).toBe('never');
+    expect(countdownText(0)).toBe('Today');
+    expect(countdownText(1)).toBe('Tomorrow');
+    expect(countdownText(3)).toBe('In 3 days');
   });
 });
