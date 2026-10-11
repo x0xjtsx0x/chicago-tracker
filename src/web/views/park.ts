@@ -34,7 +34,7 @@ export async function renderPark(root: HTMLElement): Promise<void> {
     h('span', null, h('span', { class: 'dot', style: 'background:#7b3fa0' }), 'Permit zone'));
 
   root.append(h('h1', null, 'Street parking'),
-    h('div', { class: 'row' }, input, h('button', { onclick: locate }, '📍 Near me')), results,
+    h('div', { class: 'row' }, input, h('button', { class: 'primary', onclick: () => { void search(); } }, 'Search'), h('button', { onclick: locate }, '📍 Near me')), results,
     h('div', { class: 'row' }, whenSel, whenInput, radiusSel, plowToggle), status, mapEl, legend, list);
 
   map = L.map(mapEl, { zoomControl: true }).setView([41.8819, -87.6278], 13);
@@ -42,18 +42,20 @@ export async function renderPark(root: HTMLElement): Promise<void> {
   const main = L.layerGroup().addTo(map), boxes = L.layerGroup(), plows = L.layerGroup();
   map.on('zoomend', () => { if (map!.getZoom() >= 17) boxes.addTo(map!); else boxes.remove(); });
 
-  let timer: number | undefined;
-  input.addEventListener('input', () => {
-    window.clearTimeout(timer);
+  // Search runs only on Enter or the Search button, never per keystroke: Nominatim's usage policy
+  // forbids autocomplete, and every uncached query is a live request to it.
+  async function search() {
     const q = input.value.trim();
-    if (q.length < 3) { clear(results); return; }
-    timer = window.setTimeout(async () => {
-      const hits = await api<GeoResult[]>(`/api/geocode?q=${encodeURIComponent(q)}`).catch(() => []);
-      clear(results);
-      if (!hits.length) results.append(h('p', { class: 'muted small' }, "Couldn't find that address."));
-      for (const g of hits) results.append(h('button', { onclick: () => choose(g) }, g.label));
-    }, 400);
-  });
+    clear(results);
+    if (q.length < 3) return;
+    results.append(h('p', { class: 'muted small' }, 'Searching…'));
+    const hits = await api<GeoResult[]>(`/api/geocode?q=${encodeURIComponent(q)}`).catch(() => []);
+    clear(results);
+    if (!hits.length) results.append(h('p', { class: 'muted small' }, "Couldn't find that address."));
+    for (const g of hits) results.append(h('button', { onclick: () => choose(g) }, g.label));
+  }
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); void search(); } });
+  input.addEventListener('input', () => { if (!input.value.trim()) clear(results); });
   radiusSel.addEventListener('change', () => { radius = Number(radiusSel.value); void load(); });
   whenSel.addEventListener('change', () => {
     whenInput.hidden = whenSel.value !== 'custom';
