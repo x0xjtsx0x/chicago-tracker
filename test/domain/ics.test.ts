@@ -29,8 +29,11 @@ describe('ics', () => {
     expect(ics).not.toContain('BEGIN:VEVENT');
     expect(ics).toContain('END:VCALENDAR');
   });
-  it('escapes text', () => {
-    expect(icsEscape('a,b;c\\d\ne')).toBe('a\\,b\;c\\\\d\\ne');
+  it('escapes commas, semicolons, backslashes and newlines', () => {
+    expect(icsEscape('a,b;c\\d\ne')).toBe('a\\,b\\;c\\\\d\\ne');
+    expect(icsEscape('x;y')).toBe('x\\;y'); // the old test asserted '\;' which is just ';' in JS
+    const ics = buildIcs('x', [{ uid: 'u', date: '2026-10-14', summary: 'Home; Mom, Dad', description: 'd' }], '20261011T120000Z');
+    expect(ics).toContain('SUMMARY:Home\\; Mom\\, Dad');
   });
   it('folds long lines on UTF-8 boundaries', () => {
     const ics = buildIcs('x', [{ uid: 'u', date: '2026-10-14', summary: '—'.repeat(60), description: 'd' }], '20261011T120000Z');

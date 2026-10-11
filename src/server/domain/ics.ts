@@ -3,8 +3,10 @@ import type { SweepIndex } from './sweeping.js';
 
 export interface IcsEvent { uid: string; date: string; summary: string; description: string }
 
+// RFC 5545 §3.3.11: backslash, semicolon, comma and newline are escaped in TEXT values.
+// (In a JS literal '\;' is just ';', so the semicolon must be written '\\;'.)
 export const icsEscape = (s: string): string =>
-  s.replace(/\\/g, '\\\\').replace(/;/g, '\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+  s.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
 
 /** RFC 5545 §3.1: lines ≤ 75 octets; continuation lines start with one space. Never split a UTF-8 sequence. */
 function fold(line: string): string {
