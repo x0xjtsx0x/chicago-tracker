@@ -20,6 +20,7 @@ describe('auth + /api/me', () => {
     const me = r.json();
     expect(me).toMatchObject({ login: OWNER, isOwner: true, navApp: 'apple' });
     expect(me.calUrl).toMatch(/^webcal:\/\/chicago\.tail1234\.ts\.net\/cal\/[A-Za-z0-9_-]{32,}\.ics$/);
+    expect(me.towSearchUrl).toBe('https://data.cityofchicago.org/d/ygr5-vcbg');
   });
   it('allowed second user is a separate, non-owner profile', async () => {
     const { app } = await makeTestApp();

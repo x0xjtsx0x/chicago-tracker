@@ -14,6 +14,8 @@ export function meView(deps: AppDeps, u: User) {
     login: u.login, name: u.name, isOwner: isOwner(u, deps.cfg), navApp: u.navApp,
     calUrl: calUrl(deps.cfg, u.calToken), ntfyTopic: u.ntfyTopic, notifyPrefs: u.notifyPrefs,
     ntfyConfigured: !!deps.cfg.ntfyUrl, ntfyUrl: deps.cfg.ntfyUrl, comedOutageUrl: deps.cfg.utilities.comedOutageUrl,
+    // Backup for the vehicle card: the city's own Towed Vehicles dataset page, searchable by plate.
+    towSearchUrl: `https://data.cityofchicago.org/d/${deps.cfg.datasets.socrata.towed}`,
   };
 }
 
