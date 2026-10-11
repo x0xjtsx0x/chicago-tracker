@@ -80,7 +80,12 @@ export function normPermit(row: any, dataset: PermitDataset): Permit {
   const num_ = from && to && from !== to ? `${from}-${to}` : from ?? '';
   const location = [num_, row.direction, row.streetname, row.suffix].filter(Boolean).join(' ') || String(row.applicationname ?? '');
   return {
-    id: String(row.uniquekey), dataset,
+    // Most CDOT permit datasets have a per-row uniquekey. Filming permits (c2az-nhru) don't: one
+    // applicationnumber spans several street segments, so the id is application + segment.
+    id: row.uniquekey !== undefined && row.uniquekey !== null
+      ? String(row.uniquekey)
+      : `${row.applicationnumber}:${from ?? ''}-${to ?? ''}:${row.direction ?? ''}:${row.streetname ?? ''}`,
+    dataset,
     appType: String(row.applicationdescription ?? row.applicationtype ?? ''),
     workType: String(row.worktypedescription ?? row.worktype ?? ''),
     start: normalizeSocrataTs(row.applicationstartdate), end: normalizeSocrataTs(row.applicationenddate),

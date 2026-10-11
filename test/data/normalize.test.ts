@@ -29,6 +29,13 @@ describe('normalizers', () => {
     expect(p).toMatchObject({ id: '1', dataset: 'current', start: '2026-10-01T00:00:00', end: '2026-10-30T23:59:59', meterBagging: true, applicant: 'Peoples Gas*', location: '3950 W ROSEMONT AVE', point: [-87.72, 41.99] });
     expect(N.normPermit({ uniquekey: '2', latitude: '0', longitude: '0' }, 'closures').point).toBeNull();
   });
+  it('filming permits (no uniquekey) get a per-segment id from applicationnumber', () => {
+    const seg = (from: string, to: string, dir: string, street: string) => N.normPermit({ applicationnumber: '2206656', applicationstartdate: '2027-01-08T00:00:00.000', applicationenddate: '2027-01-09T23:59:59.000', streetnumberfrom: from, streetnumberto: to, direction: dir, streetname: street, suffix: 'ST', latitude: '41.869', longitude: '-87.625' }, 'filming');
+    const a = seg('68', '80', 'E', '11TH'), b = seg('1100', '1158', 'S', 'WABASH');
+    expect(a.id).toBe('2206656:68-80:E:11TH');
+    expect(b.id).not.toBe(a.id);
+    expect(a.id).not.toContain('undefined');
+  });
   it('permit zone parses ranges and parity', () => {
     expect(N.normPermitZone({ status: 'ACTIVE', zone: '1130', odd_even: 'O', address_range_low: '1363', address_range_high: '1425', street_direction: 'W', street_name: 'Wilson ', street_type: 'AVE' }))
       .toEqual({ zone: '1130', oddEven: 'O', low: 1363, high: 1425, dir: 'W', name: 'WILSON', type: 'AVE' });
