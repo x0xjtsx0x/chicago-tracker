@@ -5,7 +5,8 @@ import { DataCache } from '../../src/server/data/cache.js';
 import type { AppDeps, Services } from '../../src/server/services.js';
 
 export const OWNER = 'owner@example.com';
-export const asUser = (login: string, name = login) => ({ 'tailscale-user-login': login, 'tailscale-user-name': name });
+// Includes the X-Requested-With header the CSRF guard demands on mutating requests (harmless on GETs).
+export const asUser = (login: string, name = login) => ({ 'tailscale-user-login': login, 'tailscale-user-name': name, 'x-requested-with': 'test' });
 
 export const stubServices = (): Services => ({
   geocode: async () => [{ label: '730 W Randolph St, Chicago', lat: 41.8845, lon: -87.647 }],

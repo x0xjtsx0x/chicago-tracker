@@ -62,6 +62,21 @@ describe('auth + /api/me', () => {
     expect((await app.inject({ method: 'GET', url: '/%61pi/me', headers: asUser(OWNER) })).json().login).toBe(OWNER);
     expect(deps.store.listUsers().map((u) => u.login)).toEqual([OWNER]);
   });
+  it('CSRF: body-less and text/plain POSTs without the custom header are refused (identity is ambient in single-user mode)', async () => {
+    const { app } = await makeTestApp({}, { SINGLE_USER_LOGIN: OWNER });
+    const before = (await app.inject({ method: 'GET', url: '/api/me' })).json().calUrl;
+    // What a cross-site <form> or fetch(..., {mode: 'no-cors'}) can send: no body, or a text/plain body.
+    expect((await app.inject({ method: 'POST', url: '/api/me/cal-token' })).statusCode).toBe(403);
+    expect((await app.inject({ method: 'POST', url: '/api/me/cal-token', headers: { 'content-type': 'text/plain' }, payload: 'x' })).statusCode).toBe(403);
+    expect((await app.inject({ method: 'POST', url: '/api/admin/refresh' })).statusCode).toBe(403);
+    expect((await app.inject({ method: 'POST', url: '/api/me/notifications/test' })).statusCode).toBe(403);
+    expect((await app.inject({ method: 'PATCH', url: '/api/me', headers: { 'content-type': 'text/plain' }, payload: 'navApp=waze' })).statusCode).toBe(403);
+    expect((await app.inject({ method: 'GET', url: '/api/me' })).json().calUrl).toBe(before);
+    // Same-origin script sends JSON or the custom header; both pass.
+    expect((await app.inject({ method: 'POST', url: '/api/me/cal-token', headers: { 'x-requested-with': 'chicago-tracker' } })).statusCode).toBe(200);
+    expect((await app.inject({ method: 'PATCH', url: '/api/me', payload: { navApp: 'waze' } })).statusCode).toBe(200);
+    expect((await app.inject({ method: 'GET', url: '/api/me' })).json().calUrl).not.toBe(before);
+  });
   it('X-Forwarded-For is not trusted (trustProxy off)', async () => {
     const { app } = await makeTestApp();
     app.get('/__ip', async (req) => ({ ip: req.ip }));
