@@ -18,6 +18,16 @@ export function parseChicagoAddress(q: string): { num: number; dir: string; name
   return { num: Number(m[1]), dir: m[2], name: m[3].trim(), type: m[4] ?? null };
 }
 
+/**
+ * ArcGIS where-clause for the parcel fallback. The city's CDN/WAF returns 403 for any query string
+ * that pairs a quoted literal with AND/OR (`PRE_DIR = 'W' AND ...` is an SQL-injection signature to
+ * it), which made this fallback fail on every call. `IN ('W')` is accepted. Verified live 2026-10-11.
+ */
+export function parcelWhere(a: { num: number; dir: string; name: string; type: string | null }): string {
+  const inList = (s: string) => `IN (${soqlStr(s)})`;
+  return [`L_ADDR <= ${a.num}`, `H_ADDR >= ${a.num}`, `PRE_DIR ${inList(a.dir)}`, `ST_NAME ${inList(a.name)}`, ...(a.type ? [`ST_TYPE ${inList(a.type)}`] : [])].join(' AND ');
+}
+
 export function createGeocoder(d: {
   fetchJson: FetchJson; cfg: AppConfig; store: Store; nowLocal: () => string;
   sleep?: (ms: number) => Promise<void>; clock?: () => number;
@@ -50,7 +60,7 @@ export function createGeocoder(d: {
   async function parcel(q: string): Promise<GeoResult[]> {
     const a = parseChicagoAddress(q);
     if (!a) return [];
-    const where = [`L_ADDR <= ${a.num}`, `H_ADDR >= ${a.num}`, `PRE_DIR = ${soqlStr(a.dir)}`, `ST_NAME = ${soqlStr(a.name)}`, ...(a.type ? [`ST_TYPE = ${soqlStr(a.type)}`] : [])].join(' AND ');
+    const where = parcelWhere(a);
     const feats = await arcgisQueryOnce(d.fetchJson, d.cfg.datasets.arcgisBase, d.cfg.datasets.layers.parcels, { where, outFields: 'L_ADDR,H_ADDR,PRE_DIR,ST_NAME,ST_TYPE', resultRecordCount: '1' });
     const p = feats.map(normParcel).find((x) => x !== null);
     return p ? [{ label: [a.num, a.dir, a.name, a.type].filter(Boolean).join(' '), lat: p.centroid[1], lon: p.centroid[0] }] : [];

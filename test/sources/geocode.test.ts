@@ -35,7 +35,10 @@ describe('createGeocoder', () => {
   it('falls back to the parcel layer when Nominatim finds nothing', async () => {
     const fetchJson = vi.fn(async (u: string) => {
       if (u.includes('nominatim')) return [];
-      expect(new URL(u).searchParams.get('where')).toContain("ST_NAME = 'RANDOLPH'");
+      const where = new URL(u).searchParams.get('where')!;
+      // `= 'X' AND` trips the city WAF (HTTP 403); only the IN ('X') form is accepted.
+      expect(where).toBe("L_ADDR <= 1200 AND H_ADDR >= 1200 AND PRE_DIR IN ('W') AND ST_NAME IN ('RANDOLPH') AND ST_TYPE IN ('ST')");
+      expect(where).not.toMatch(/'\s+(AND|OR)\b/i);
       return { features: [{ attributes: { L_ADDR: 1200, H_ADDR: 1200, PRE_DIR: 'W', ST_NAME: 'RANDOLPH', ST_TYPE: 'ST' }, geometry: { rings: [[[-87.66, 41.88], [-87.658, 41.88], [-87.658, 41.882], [-87.66, 41.882], [-87.66, 41.88]]] } }] };
     });
     const g = createGeocoder({ fetchJson, cfg, store: openStore(':memory:'), nowLocal: () => 'n', sleep: async () => {}, clock: () => 0 });
