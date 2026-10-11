@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildParking } from '../../src/server/domain/parking.js';
+import { buildParking, sundayReason } from '../../src/server/domain/parking.js';
 import { buildSweepIndex } from '../../src/server/domain/sweeping.js';
 import { loadConfig } from '../../src/server/config.js';
 import type { DataSnapshot } from '../../src/server/data/cache.js';
@@ -64,5 +64,24 @@ describe('buildParking', () => {
   it('hour limit falls back to a matching pay box', () => {
     const s = snap({ permits: [], payBlocks: [block('near', 0.0005, { hourLimit: null })], payBoxes: [{ terminalId: 1, street: 'N TEST AVE', from: 2000, to: 2050, addr: 2010, spaces: 6, hourLimit: '3', payZone: 1, payArea: 101, point: [center[0] + 0.0005, center[1]] }] });
     expect(run('2026-10-13T10:00:00', s).blocks[0].hourLimit).toBe('3');
+  });
+  it('closure pattern: Full, Curblane, Partial and Intermitte are red; Sidewalk is not', () => {
+    for (const v of ['Full', 'Curblane', 'Partial', 'Intermitte']) {
+      const r = run('2026-10-14T10:00:00', snap({ permits: [permit({ streetClosure: v })] }));
+      expect(r.blocks[2].flags.map((f) => f.code), v).toContain('CLOSED');
+    }
+    const side = run('2026-10-14T10:00:00', snap({ permits: [permit({ streetClosure: 'Sidewalk' })] }));
+    expect(side.blocks[2].flags.map((f) => f.code)).not.toContain('CLOSED');
+  });
+  it('Sunday flag wording follows SUNDAY_HOURS once verified, and stays generic otherwise', () => {
+    expect(sundayReason('Y', true)).toMatch(/meters enforced/);
+    expect(sundayReason('N', true)).toMatch(/free on this block/);
+    expect(sundayReason(null, true)).toMatch(/possibly free/);
+    expect(sundayReason('Y', false)).toMatch(/possibly free/);
+    const s = snap({ permits: [], payBlocks: [block('y', 0.0004, { sundayHours: 'Y' }), block('n', 0.0006, { sundayHours: 'N' })] });
+    const r = run('2026-12-13T10:00:00', s, { sundayHoursVerified: true }); // a Sunday
+    expect(r.blocks.find((b) => b.blockId === 'y')!.flags.find((f) => f.code === 'SUNDAY')!.reason).toMatch(/meters enforced/);
+    expect(r.blocks.find((b) => b.blockId === 'n')!.flags.find((f) => f.code === 'SUNDAY')!.reason).toMatch(/free on this block/);
+    expect(datasets.sundayHoursVerified).toBe(true);
   });
 });

@@ -21,6 +21,7 @@ describe('/api/parking', () => {
     expect((await app.inject({ method: 'GET', url: '/api/parking?lat=40&lon=-74', headers: asUser(OWNER) })).statusCode).toBe(400);
     expect((await app.inject({ method: 'GET', url: '/api/parking?lat=41.88&lon=-87.64&radius=99999', headers: asUser(OWNER) })).json().radiusM).toBe(1500);
     expect((await app.inject({ method: 'GET', url: '/api/parking?lat=41.88&lon=-87.64&at=tomorrow', headers: asUser(OWNER) })).statusCode).toBe(400);
+    expect((await app.inject({ method: 'GET', url: '/api/parking?lat=41.88&lon=-87.64&at=2026-13-45T99:99', headers: asUser(OWNER) })).statusCode).toBe(400); // right shape, not a date
     expect((await app.inject({ method: 'GET', url: '/api/parking?lat=41.88&lon=-87.64&at=2026-10-14T18:00', headers: asUser(OWNER) })).json().at).toBe('2026-10-14T18:00:00');
   });
   it('degrades gracefully when the parcel lookup fails', async () => {

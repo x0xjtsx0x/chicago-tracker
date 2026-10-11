@@ -10,6 +10,15 @@ export interface ParkingInput {
   snap: DataSnapshot; center: LngLat; radiusM: number; at: string;
   rates: RatesConfig; closureRedPattern: string; sweepIdx: SweepIndex;
   permitZones: PermitZoneFeature[]; warnings: string[]; dataAsOf: Record<string, string | null>;
+  /** config.datasets.sundayHoursVerified: when true, SUNDAY_HOURS Y/N is trusted (docs/DATA-FACTS.md). */
+  sundayHoursVerified?: boolean;
+}
+
+/** Sunday flag text. Y = meters enforced on Sundays, N = free Sundays (verified 2026-10-11, docs/DATA-FACTS.md). */
+export function sundayReason(sundayHours: string | null, verified: boolean): string {
+  if (verified && sundayHours === 'Y') return 'Sunday: meters enforced on this block — pay as posted';
+  if (verified && sundayHours === 'N') return 'Sunday: free on this block per city data — check the posted sign';
+  return 'Sunday: possibly free — check the posted sign';
 }
 
 export const STATUS_ORDER: Record<BlockStatus, number> = { green: 0, info: 1, amber: 2, red: 3 };
@@ -59,9 +68,9 @@ export function buildParking(inp: ParkingInput): ParkingResult {
     else if (party) flags.push({ code: 'EVENT_NEARBY', severity: 'amber', reason: `Block party nearby (${party.location})` });
 
     if (winter && snap.snowRoutes.some((r) => bboxNear(r.bbox, mid, 15) && distToPathsM(mid, r.paths) <= 15)) {
-      flags.push({ code: 'SNOW_ROUTE', severity: 'amber', reason: 'Snow route — 2-inch snow parking ban may apply' });
+      flags.push({ code: 'SNOW_ROUTE', severity: 'amber', reason: 'On the city’s 2-inch snow ban list — towed if a ban is declared' });
     }
-    if (weekday(date) === 0) flags.push({ code: 'SUNDAY', severity: 'info', reason: 'Sunday: possibly free — check the posted sign' });
+    if (weekday(date) === 0) flags.push({ code: 'SUNDAY', severity: 'info', reason: sundayReason(b.sundayHours, !!inp.sundayHoursVerified) });
 
     const status: BlockStatus = flags.reduce<BlockStatus>((s, f) => (SEV_ORDER[f.severity] > STATUS_ORDER[s] ? f.severity : s), 'green');
     blocks.push({

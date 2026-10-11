@@ -16,7 +16,7 @@ export function registerParking(app: FastifyInstance, deps: AppDeps): void {
     }
     const radiusM = Math.min(1500, Math.max(100, Number(req.query.radius ?? 400) || 400));
     let at = req.query.at ?? deps.nowLocal();
-    if (!AT_RE.test(at)) return reply.code(400).send({ error: 'at must be YYYY-MM-DDTHH:mm (Chicago local)' });
+    if (!AT_RE.test(at) || Number.isNaN(Date.parse(`${at}Z`))) return reply.code(400).send({ error: 'at must be YYYY-MM-DDTHH:mm (Chicago local)' });
     if (at.length === 16) at += ':00';
 
     const warnings: string[] = [];
@@ -29,7 +29,7 @@ export function registerParking(app: FastifyInstance, deps: AppDeps): void {
     }
     return buildParking({
       snap: deps.cache.snap, center: [lon, lat], radiusM, at, rates: deps.cfg.rates,
-      closureRedPattern: deps.cfg.datasets.closureRedPattern,
+      closureRedPattern: deps.cfg.datasets.closureRedPattern, sundayHoursVerified: deps.cfg.datasets.sundayHoursVerified,
       sweepIdx: sweepIndexFor(deps.cache.snap, deps.cfg.datasets.sweepingYear),
       permitZones, warnings, dataAsOf: deps.cache.asOf(),
     });
