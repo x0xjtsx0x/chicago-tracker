@@ -67,7 +67,9 @@ export async function renderPark(root: HTMLElement): Promise<void> {
     if (!on) { plows.remove(); return; }
     const b = map!.getBounds();
     const list_ = await api<Plow[]>(`/api/plows?bbox=${[b.getWest(), b.getSouth(), b.getEast(), b.getNorth()].map((n) => n.toFixed(4)).join(',')}`).catch(() => []);
-    for (const p of list_) L.circleMarker(toLatLng(p.point), { radius: 6, color: '#333', fillColor: '#ffd400', fillOpacity: 1 }).bindTooltip(`${p.type} · ${p.minutesAgo} min ago`).addTo(plows);
+    // Tooltip/popup content is always a DOM node: Leaflet assigns string content to innerHTML, and
+    // asset types, place labels and geocoder labels are untrusted city/OSM text.
+    for (const p of list_) L.circleMarker(toLatLng(p.point), { radius: 6, color: '#333', fillColor: '#ffd400', fillOpacity: 1 }).bindTooltip(h('span', null, `${p.type} · ${p.minutesAgo} min ago`)).addTo(plows);
     plows.addTo(map!);
     status.textContent = `${list_.length} plows reporting in view (last 2h).`;
   });
@@ -100,12 +102,12 @@ export async function renderPark(root: HTMLElement): Promise<void> {
     main.clearLayers(); boxes.clearLayers(); clear(list);
     const center = toLatLng(r.center);
     const circle = L.circle(center, { radius: r.radiusM, color: '#888', weight: 1, fill: false, dashArray: '4 4' }).addTo(main);
-    L.circleMarker(center, { radius: 8, color: '#000', weight: 2, fillColor: '#fff', fillOpacity: 1 }).bindTooltip(dest?.label ?? 'Destination').addTo(main);
+    L.circleMarker(center, { radius: 8, color: '#000', weight: 2, fillColor: '#fff', fillOpacity: 1 }).bindTooltip(h('span', null, dest?.label ?? 'Destination')).addTo(main);
     for (const z of r.permitZones) {
       const layer = z.line.length > 1
         ? L.polyline(z.line.map(toLatLng), { color: '#7b3fa0', weight: 5, dashArray: '6 6' })
         : L.circleMarker(toLatLng(z.line[0]), { radius: 6, color: '#7b3fa0' });
-      layer.bindTooltip(z.label).addTo(main);
+      layer.bindTooltip(h('span', null, z.label)).addTo(main);
     }
     for (const c of r.closures) if (c.point) {
       L.circleMarker(toLatLng(c.point), { radius: 7, color: '#d73027', fillColor: '#d73027', fillOpacity: .5 })
@@ -114,7 +116,7 @@ export async function renderPark(root: HTMLElement): Promise<void> {
     for (const b of r.blocks) {
       L.polyline(b.paths.map((p) => p.map(toLatLng)), { color: STATUS_COLOR[b.status], weight: 8, opacity: .9 }).on('click', () => openBlock(b)).addTo(main);
     }
-    for (const x of r.boxes) L.circleMarker(toLatLng(x.point), { radius: 4, color: '#444', weight: 1, fillColor: '#fff', fillOpacity: 1 }).bindTooltip(`Pay box · area ${x.payArea}`).addTo(boxes);
+    for (const x of r.boxes) L.circleMarker(toLatLng(x.point), { radius: 4, color: '#444', weight: 1, fillColor: '#fff', fillOpacity: 1 }).bindTooltip(h('span', null, `Pay box · area ${x.payArea}`)).addTo(boxes);
     map!.fitBounds(circle.getBounds(), { padding: [10, 10] });
 
     const when = r.at.slice(0, 16).replace('T', ' ');
