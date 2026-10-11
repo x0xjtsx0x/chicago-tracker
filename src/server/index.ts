@@ -16,7 +16,7 @@ import { refreshWinter } from './jobs/winterJob.js';
 import { publishNtfy } from './notify/ntfy.js';
 import { runNotifier } from './notify/runner.js';
 import { buildApp } from './app.js';
-import { needsStartupRefresh, safely, startScheduler } from './scheduler.js';
+import { needsStartupRefresh, safely, singleFlight, startScheduler } from './scheduler.js';
 import { chicagoNow, datePart } from './util/chicagoTime.js';
 import type { Services } from './services.js';
 
@@ -32,17 +32,19 @@ async function main() {
   const nws = createNws(createFetchJson({ userAgent: cfg.nwsUserAgent }), cfg.nwsUserAgent);
   const publish = (topic: string, p: Parameters<typeof publishNtfy>[3]) => publishNtfy(fetch, { url: cfg.ntfyUrl!, token: cfg.ntfyToken }, topic, p);
 
-  const refreshNow = async () => {
+  // singleFlight: the nightly cron, the startup refresh and the owner's Refresh button must never
+  // run concurrently (each holds a full copy of the city data while it runs).
+  const refreshNow = singleFlight(async () => {
     const r = await refreshAll(store, buildDatasetJobs(cfg, fetchJson, datePart(nowLocal())), nowLocal());
     cache.reload();
     return r;
-  };
+  });
   const services: Services = {
     geocode: createGeocoder({ fetchJson, cfg, store, nowLocal }),
     parcelsNear: createParcelFetcher({ fetchJson, cfg, store, nowLocal }),
     plows: createPlowFetcher({ fetchJson, cfg }),
     refreshNow,
-    checkVehicles: () => checkVehicles({ fetchJson, cfg, store, nowLocal }),
+    checkVehicles: singleFlight(() => checkVehicles({ fetchJson, cfg, store, nowLocal })),
     sendTestPush: async (user) => {
       if (!cfg.ntfyUrl) throw new Error('Push is disabled (NTFY_URL is empty)');
       await publish(user.ntfyTopic, { title: '✅ Chicago Tracker test', message: 'Push notifications are working.', priority: 'default', click: `${cfg.publicBaseUrl}/#/settings` });

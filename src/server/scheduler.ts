@@ -7,6 +7,19 @@ export function needsStartupRefresh(meta: DatasetMeta | null, nowLocal: string):
   return (Date.parse(`${nowLocal}Z`) - Date.parse(`${meta.fetchedAt}Z`)) / 3_600_000 > 24;
 }
 
+/**
+ * At most one run in flight: callers while a run is active get that run's promise. Used for the
+ * full refresh (nightly cron, startup and the owner's Refresh button could otherwise overlap and
+ * hold several copies of the city data in memory) and the vehicle check.
+ */
+export function singleFlight<T>(fn: () => Promise<T>): () => Promise<T> {
+  let inflight: Promise<T> | null = null;
+  return () => {
+    if (!inflight) inflight = fn().finally(() => { inflight = null; });
+    return inflight;
+  };
+}
+
 export const safely = (name: string, fn: () => Promise<unknown>, log: { error: (o: object, m: string) => void }) =>
   async (): Promise<void> => { try { await fn(); } catch (e) { log.error({ job: name, err: (e as Error).message }, `${name} failed`); } };
 
