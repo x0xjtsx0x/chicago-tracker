@@ -203,7 +203,7 @@ Block `flags` (each with a human-readable reason):
 | `SNOW_ROUTE` | The block is on a main snow route (informational, Dec–Mar) | amber |
 | `SUNDAY` | `at` is a Sunday: "possibly free / check sign" until `SUNDAY_HOURS` is verified | info |
 
-Blocks are sorted by severity, then by distance.
+A block's `status` is its worst flag severity (`green` if there are no flags). Blocks are sorted with the best options first: `green` → `info` → `amber` → `red`, then by distance.
 
 ### 4.6 Watched addresses
 
@@ -215,7 +215,7 @@ The same response includes `requests311[]`: 311 requests within the radius creat
 
 - A user may save up to 3 plates (`plate`, `state`, optional nickname). Plates are normalized to uppercase with spaces and dashes removed.
 - Every 30 min, query `ygr5-vcbg` and `5k2z-suxx` with `$where=plate='<P>' AND state='<S>'` over the last 14 days. Never mirror the whole datasets.
-- A **towed** match shows tow date, tow lot address and phone, inventory number, and a Navigate button to the lot. A **relocated** match shows the date, reason, from address and to address, with Navigate to the "to" address (geocoded).
+- A **towed** match shows tow date, tow lot address and phone, inventory number, and a Navigate button to the lot. A **relocated** match shows the date, reason, from address and to address, with Navigate to the "to" address (passed to the maps app as an address string, `"<address>, Chicago, IL"`).
 - Home shows a vehicle card: "✅ Not in tow or relocation records (checked 10:30)" or a red card with the details. The card notes that city records lag reality by hours, and links to the city's tow-search page as a backup.
 - Each new match (keyed by `inventory_number` or `service_request_number`) produces one push (§4.10).
 - Plates are personal data: never log them, and delete them with the user.
@@ -314,7 +314,7 @@ Three tabs (a bottom bar on phone, a sidebar on desktop):
    - **Metered blocks** are drawn as thick lines: green when there are no flags, amber for warnings, red for blocks to avoid. **Permit zones** are purple dashed lines. **Closures** are red hatched. Pay boxes appear as small dots at zoom 17 and closer.
    - A "When?" control (Now / pick date & time) re-queries with `at`. A radius control is included.
    - Tapping a block opens a bottom sheet: street and range, side, spaces, hour limit, ≈ rate and hours, **Pay area #NNN** with a copy button, flags with reasons, the distance from the destination, a **Navigate** button, and a **ParkChicago** button (opens https://parkchicago.com or the app; the pay area is copied to the clipboard first).
-   - A list view below or beside the map shows the same blocks sorted by severity, then distance.
+   - A list view below or beside the map shows the same blocks in the same order (best first, then distance).
    - A legend, and "Data as of …" in the footer.
 3. **Places & Settings:** add, edit and delete home and watched places. For homes, a zone picker when there are several candidates. Also:
    - Saved plates.
