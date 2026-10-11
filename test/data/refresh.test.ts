@@ -25,6 +25,16 @@ describe('refreshAll', () => {
     const r2 = await refreshAll(s, [job('payBoxes', [])], 't3');
     expect(r2.failed[0].error).toMatch(/suspicious row count 0/);
   });
+  it('windowed datasets accept zero rows and seasonal drops (block parties in January, no special events)', async () => {
+    const s = openStore(':memory:');
+    const windowed = (rows: unknown[]): DatasetJob => ({ ...job('permitsBlockParty', rows), guard: 'windowed' });
+    await refreshAll(s, [windowed(Array.from({ length: 340 }, (_, i) => ({ i })))], 't1');
+    const r1 = await refreshAll(s, [windowed([])], 't2');
+    expect(r1.ok).toEqual(['permitsBlockParty']);
+    expect(r1.failed).toEqual([]);
+    expect(s.getDatasetMeta('permitsBlockParty')).toMatchObject({ status: 'ok', rowCount: 0, fetchedAt: 't2' });
+    expect(s.loadDataset<any[]>('permitsBlockParty')).toEqual([]);
+  });
 });
 
 describe('DataCache', () => {

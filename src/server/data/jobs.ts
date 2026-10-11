@@ -13,8 +13,13 @@ export function buildDatasetJobs(cfg: AppConfig, fetchJson: FetchJson, today: st
   const soc = (id: string, q: { where?: string; select?: string } = {}) =>
     socrataQueryAll(fetchJson, d.socrataBase, id, q, { appToken: cfg.socrataAppToken });
   const list = <T>(rows: T[]) => ({ rows, count: rows.length });
+  // Only the columns normPermit reads. The Current-and-Future dataset is ~50k rows in the 60-day
+  // window and has ~45 columns; fetching them all is ~100 MB per nightly refresh on a small box.
+  // Every column here exists in all four CDOT permit datasets (verified 2026-10-11) except
+  // uniquekey, which filming permits lack, so it is requested only where it exists.
   const permitJob = (name: DatasetJob['name'], id: string, ds: PermitDataset): DatasetJob => ({
-    name, run: async () => list((await soc(id, { where: N.permitWindowWhere(today) })).map((r) => N.normPermit(r, ds))),
+    name, guard: 'windowed',
+    run: async () => list((await soc(id, { where: N.permitWindowWhere(today), select: N.permitSelect(ds) })).map((r) => N.normPermit(r, ds))),
   });
   return [
     { name: 'payBlocks', run: async () => list((await arc(d.layers.payBlocks)).map(N.normPayBlock)) },
@@ -28,6 +33,6 @@ export function buildDatasetJobs(cfg: AppConfig, fetchJson: FetchJson, today: st
     permitJob('permitsCurrent', d.socrata.permitsCurrent, 'current'),
     permitJob('permitsBlockParty', d.socrata.permitsBlockParty, 'blockparty'),
     permitJob('permitsFilming', d.socrata.permitsFilming, 'filming'),
-    { name: 'specialEvents', run: async () => list((await soc(d.socrata.specialEvents, { where: `date >= '${addDays(today, -1)}T00:00:00'` })).map(N.normEvent)) },
+    { name: 'specialEvents', guard: 'windowed', run: async () => list((await soc(d.socrata.specialEvents, { where: `date >= '${addDays(today, -1)}T00:00:00'` })).map(N.normEvent)) },
   ];
 }

@@ -116,6 +116,15 @@ export function norm311(row: any): Request311 {
   };
 }
 
+const PERMIT_COLUMNS = [
+  'applicationnumber', 'streetnumberfrom', 'streetnumberto', 'direction', 'streetname', 'suffix', 'applicationname',
+  'applicationdescription', 'applicationtype', 'worktypedescription', 'worktype', 'applicationstartdate', 'applicationenddate',
+  'streetclosure', 'detail', 'comments', 'parkingmeterpostingorbagging', 'primarycontactlast', 'latitude', 'longitude',
+];
+/** `$select` list for a CDOT permit dataset: exactly the columns normPermit reads. */
+export const permitSelect = (dataset: PermitDataset): string =>
+  (dataset === 'filming' ? PERMIT_COLUMNS : ['uniquekey', ...PERMIT_COLUMNS]).join(',');
+
 export function permitWindowWhere(today: string, daysAhead = 60): string {
   return `applicationenddate >= '${addDays(today, -1)}T00:00:00' AND applicationstartdate <= '${addDays(today, daysAhead)}T23:59:59'`;
 }
