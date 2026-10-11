@@ -3,3 +3,5 @@
 /data/
 *.db
 .env
+/deploy/chicago-tracker.env
+/deploy/data/

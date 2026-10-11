@@ -1,0 +1,20 @@
+# Single-user deployment behind the homelab's tailnet-only reverse proxy (docs/DEPLOYMENT-ADAPTATIONS.md).
+# BIND_IP is the container host's LAN address that the proxy reaches. Set it in the shell or in
+# deploy/.env (compose variable substitution), not in chicago-tracker.env. A host firewall must
+# admit only the proxy to this port. Without BIND_IP the port stays on loopback.
+services:
+  chicago-tracker:
+    build: ..
+    image: chicago-tracker:local
+    container_name: chicago-tracker
+    restart: unless-stopped
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    user: "1000:1000"
+    env_file: ./chicago-tracker.env
+    volumes:
+      - ./data:/data
+    ports:
+      - "${BIND_IP:-127.0.0.1}:8787:8787"
