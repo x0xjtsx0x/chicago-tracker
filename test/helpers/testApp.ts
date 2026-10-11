@@ -15,6 +15,7 @@ export const stubServices = (): Services => ({
   refreshNow: async () => ({ ok: [], failed: [] }),
   sendTestPush: async () => {},
   checkVehicles: async () => {},
+  checkVehicle: async (v) => ({ vehicleId: v.id, checkedAt: '2026-10-11T12:00:00', ok: true, matches: [], error: null, search: null, older: [], otherState: [] }),
 });
 
 export async function makeTestApp(overrides: Partial<AppDeps> = {}, env: Record<string, string> = {}) {

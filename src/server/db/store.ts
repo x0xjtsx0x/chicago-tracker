@@ -28,11 +28,26 @@ CREATE TABLE IF NOT EXISTS notifications_sent (
 
 export type Store = ReturnType<typeof openStore>;
 
+/**
+ * Additive, idempotent column migrations for databases created by an earlier version. Each step
+ * checks the live schema first, so running it on every start (and on a fresh DB) is safe.
+ */
+function migrate(db: Database.Database): void {
+  const cols = (table: string) => new Set((db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[]).map((c) => c.name));
+  const v = cols('vehicles');
+  // 2026-10 (UI overhaul): make/colour let the app cross-check a tow record against the owner's car.
+  if (!v.has('make')) db.exec("ALTER TABLE vehicles ADD COLUMN make TEXT NOT NULL DEFAULT ''");
+  if (!v.has('color')) db.exec("ALTER TABLE vehicles ADD COLUMN color TEXT NOT NULL DEFAULT ''");
+  // What the last check searched, plus older and other-state records (JSON).
+  if (!cols('vehicle_status').has('extra')) db.exec('ALTER TABLE vehicle_status ADD COLUMN extra TEXT');
+}
+
 export function openStore(file: string) {
   const db = new Database(file);
   db.pragma('journal_mode = WAL');
   db.pragma('foreign_keys = ON');
   db.exec(SCHEMA);
+  migrate(db);
 
   const toUser = (r: any): User => ({
     id: r.id, login: r.login, name: r.name, calToken: r.cal_token, navApp: r.nav_app as NavApp,
@@ -42,7 +57,7 @@ export function openStore(file: string) {
     id: r.id, userId: r.user_id, kind: r.kind, label: r.label, address: r.address,
     lat: r.lat, lon: r.lon, radiusM: r.radius_m, zones: JSON.parse(r.zones),
   });
-  const toVehicle = (r: any): Vehicle => ({ id: r.id, userId: r.user_id, plate: r.plate, state: r.state, nickname: r.nickname });
+  const toVehicle = (r: any): Vehicle => ({ id: r.id, userId: r.user_id, plate: r.plate, state: r.state, nickname: r.nickname, make: r.make ?? '', color: r.color ?? '' });
   const toMeta = (r: any): DatasetMeta => ({ name: r.name, fetchedAt: r.fetched_at, rowCount: r.row_count, status: r.status, error: r.error });
 
   const store = {
@@ -93,18 +108,35 @@ export function openStore(file: string) {
     deletePlace(userId: number, id: number): boolean { return db.prepare('DELETE FROM places WHERE user_id = ? AND id = ?').run(userId, id).changes > 0; },
     listVehicles(userId: number): Vehicle[] { return db.prepare('SELECT * FROM vehicles WHERE user_id = ? ORDER BY id').all(userId).map(toVehicle); },
     listAllVehicles(): Vehicle[] { return db.prepare('SELECT * FROM vehicles ORDER BY id').all().map(toVehicle); },
-    createVehicle(userId: number, v: Omit<Vehicle, 'id' | 'userId'>): Vehicle {
-      const info = db.prepare('INSERT INTO vehicles (user_id, plate, state, nickname) VALUES (?,?,?,?)').run(userId, v.plate, v.state, v.nickname);
+    getVehicle(userId: number, id: number): Vehicle | null {
+      const r = db.prepare('SELECT * FROM vehicles WHERE user_id = ? AND id = ?').get(userId, id); return r ? toVehicle(r) : null;
+    },
+    createVehicle(userId: number, v: Omit<Vehicle, 'id' | 'userId' | 'make' | 'color'> & Partial<Pick<Vehicle, 'make' | 'color'>>): Vehicle {
+      const info = db.prepare('INSERT INTO vehicles (user_id, plate, state, nickname, make, color) VALUES (?,?,?,?,?,?)')
+        .run(userId, v.plate, v.state, v.nickname, v.make ?? '', v.color ?? '');
       return toVehicle(db.prepare('SELECT * FROM vehicles WHERE id = ?').get(Number(info.lastInsertRowid)));
+    },
+    /** Scoped by user_id like every other user-data query. Changing plate or state discards the old check result. */
+    updateVehicle(userId: number, id: number, patch: Partial<Pick<Vehicle, 'plate' | 'state' | 'nickname' | 'make' | 'color'>>): Vehicle | null {
+      const cur = store.getVehicle(userId, id);
+      if (!cur) return null;
+      const next = { ...cur, ...patch };
+      db.prepare('UPDATE vehicles SET plate = ?, state = ?, nickname = ?, make = ?, color = ? WHERE id = ? AND user_id = ?')
+        .run(next.plate, next.state, next.nickname, next.make, next.color, id, userId);
+      if (next.plate !== cur.plate || next.state !== cur.state) db.prepare('DELETE FROM vehicle_status WHERE vehicle_id = ?').run(id);
+      return store.getVehicle(userId, id);
     },
     deleteVehicle(userId: number, id: number): boolean { return db.prepare('DELETE FROM vehicles WHERE user_id = ? AND id = ?').run(userId, id).changes > 0; },
     setVehicleStatus(s: VehicleStatus): void {
-      db.prepare('INSERT INTO vehicle_status (vehicle_id, checked_at, ok, matches, error) VALUES (?,?,?,?,?) ON CONFLICT(vehicle_id) DO UPDATE SET checked_at=excluded.checked_at, ok=excluded.ok, matches=excluded.matches, error=excluded.error')
-        .run(s.vehicleId, s.checkedAt, s.ok ? 1 : 0, JSON.stringify(s.matches), s.error);
+      const extra = JSON.stringify({ search: s.search ?? null, older: s.older ?? [], otherState: s.otherState ?? [] });
+      db.prepare('INSERT INTO vehicle_status (vehicle_id, checked_at, ok, matches, error, extra) VALUES (?,?,?,?,?,?) ON CONFLICT(vehicle_id) DO UPDATE SET checked_at=excluded.checked_at, ok=excluded.ok, matches=excluded.matches, error=excluded.error, extra=excluded.extra')
+        .run(s.vehicleId, s.checkedAt, s.ok ? 1 : 0, JSON.stringify(s.matches), s.error, extra);
     },
     getVehicleStatus(vehicleId: number): VehicleStatus | null {
       const r: any = db.prepare('SELECT * FROM vehicle_status WHERE vehicle_id = ?').get(vehicleId);
-      return r ? { vehicleId, checkedAt: r.checked_at, ok: !!r.ok, matches: JSON.parse(r.matches), error: r.error } : null;
+      if (!r) return null;
+      const extra = r.extra ? JSON.parse(r.extra) : {};
+      return { vehicleId, checkedAt: r.checked_at, ok: !!r.ok, matches: JSON.parse(r.matches), error: r.error, search: extra.search ?? null, older: extra.older ?? [], otherState: extra.otherState ?? [] };
     },
     saveDataset(name: string, rows: unknown, rowCount: number, fetchedAt: string): void {
       db.prepare("INSERT INTO datasets (name, data, fetched_at, row_count, status, error) VALUES (?,?,?,?,'ok',NULL) ON CONFLICT(name) DO UPDATE SET data=excluded.data, fetched_at=excluded.fetched_at, row_count=excluded.row_count, status='ok', error=NULL")

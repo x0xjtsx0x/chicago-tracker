@@ -1,4 +1,4 @@
-import type { BBox, GeoResult, LngLat, Parcel, Plow, User } from '../shared/types.js';
+import type { BBox, GeoResult, LngLat, Parcel, Plow, User, Vehicle, VehicleStatus } from '../shared/types.js';
 import type { AppConfig } from './config.js';
 import type { Store } from './db/store.js';
 import type { DataCache } from './data/cache.js';
@@ -10,6 +10,8 @@ export interface Services {
   refreshNow(): Promise<{ ok: string[]; failed: { name: string; error: string }[] }>;
   sendTestPush(user: User): Promise<void>;
   checkVehicles(): Promise<void>;
+  /** Live lookup of one plate (on demand); stores and returns the result. */
+  checkVehicle(v: Vehicle): Promise<VehicleStatus>;
 }
 
 export interface AppDeps {

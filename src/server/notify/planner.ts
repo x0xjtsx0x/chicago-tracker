@@ -37,6 +37,16 @@ export function planPushes(inp: PlanInput): PlannedPush[] {
 
   for (const { status } of inp.vehicles) {
     for (const m of status?.matches ?? []) {
+      // A record with this plate but no state recorded may or may not be this car: still worth a
+      // push (missing a real tow is worse), but worded as a question and one step below urgent.
+      if (m.confidence === 'possible') {
+        out.push({
+          key: m.key, category: 'vehicle', priority: 'high', tags: ['warning'], click,
+          title: m.kind === 'towed' ? '⚠️ Possible tow record for your car' : '⚠️ Possible relocation record for your car',
+          message: 'A city record matches your plate but lists no state. Open Chicago Tracker to check it.',
+        });
+        continue;
+      }
       out.push(m.kind === 'towed'
         ? {
           key: m.key, category: 'vehicle', priority: 'urgent', tags: ['rotating_light'], click,

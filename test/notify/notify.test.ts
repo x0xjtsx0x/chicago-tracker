@@ -49,7 +49,7 @@ describe('planner', () => {
     expect(p.title).toBe('🧹 Street cleaning tomorrow — Home');
   });
   it('vehicle matches are urgent, one per match key, and name the tow lot', () => {
-    const v = { id: 1, userId: 1, plate: 'AB123', state: 'IL', nickname: 'Civic' };
+    const v = { id: 1, userId: 1, plate: 'AB123', state: 'IL', nickname: 'Civic', make: '', color: '' };
     const st = { vehicleId: 1, checkedAt: 't', ok: true, error: null, matches: [{ kind: 'towed' as const, key: 'tow:9', date: '2026-10-11', details: 'd', address: '701 N Sacramento', phone: 'p' }] };
     const p = planPushes({ ...base, nowLocal: '2026-10-11T03:00:00', vehicles: [{ vehicle: v, status: st }] });
     expect(p).toEqual([expect.objectContaining({ key: 'tow:9', category: 'vehicle', priority: 'urgent', title: '🚨 Your car was towed' })]);
@@ -90,10 +90,12 @@ describe('push privacy (payloads go through a public third party)', () => {
     nowLocal: '2026-12-01T19:30:00', baseUrl: 'https://chicago.tail1234.ts.net', homes: [h],
     isSweeping: (ws, d) => ws === '3204' && d === '2026-12-02',
     vehicles: [{
-      vehicle: { id: 1, userId: 1, plate: PLATE, state: 'IL', nickname: NICK },
+      vehicle: { id: 1, userId: 1, plate: PLATE, state: 'IL', nickname: NICK, make: 'honda', color: 'white' },
       status: { vehicleId: 1, checkedAt: 't', ok: true, error: null, matches: [
         { kind: 'towed', key: 'tow:1', date: '2026-12-01', details: `HOND WHI — inventory #1 plate ${PLATE}`, address: '701 N Sacramento Blvd', phone: '(312) 555-0100' },
         { kind: 'relocated', key: 'reloc:SR1', date: '2026-12-01', details: 'Street Cleaning — moved from 4321 W EXAMPLE AVE', address: '4325 W EXAMPLE AVE', phone: null },
+        { kind: 'relocated', key: 'reloc:SR2', date: '2026-12-01', details: 'Street Cleaning — moved from 4321 W EXAMPLE AVE', address: '4325 W EXAMPLE AVE', phone: null, confidence: 'possible', recordState: null },
+        { kind: 'towed', key: 'tow:2', date: '2026-12-01', details: `HOND WHI — inventory #2 plate ${PLATE}`, address: '701 N Sacramento Blvd', phone: null, confidence: 'possible', recordState: 'NONE' },
       ] },
     }],
     winter: [{ place: h, banKey: 'snowban:1:2026-12-01', status: { placeId: 1, label: h.label, onSnowRoute: true, possibleBan: true, snowNext24hIn: 3, checkedAt: 't', error: null, alerts: [{ id: 'w1', event: 'Winter Storm Warning', headline: 'Winter Storm Warning until Wed 6AM CST', severity: 'Severe', ends: null }] } }],
@@ -113,6 +115,7 @@ describe('push privacy (payloads go through a public third party)', () => {
     for (const f of FORBIDDEN) expect(wire).not.toContain(f.toUpperCase());
     expect(wire).toContain('701 N SACRAMENTO BLVD'); // the public tow lot is allowed
     expect(wire).toContain('🧹 STREET CLEANING TOMORROW — HOME');
+    expect(wire).toContain('POSSIBLE TOW RECORD'); // the no-state "possible" match still pushes, worded as a question
   });
   it('a place label that repeats its own house number is replaced with a generic label', async () => {
     const labelled = { ...myHome, label: '4321 W Example' };
