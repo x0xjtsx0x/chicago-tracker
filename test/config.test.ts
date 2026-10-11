@@ -16,6 +16,12 @@ describe('loadConfig', () => {
     expect(c.excluded311).toContain('311 INFORMATION ONLY CALL');
     expect(c.nwsUserAgent).toContain('me@example.com');
   });
+  it('city sources get a contact-free User-Agent (the city CDN 403s UAs with an email in them)', () => {
+    const c = loadConfig(base, 'config');
+    expect(c.cityUserAgent).toBe('chicago-tracker/0.1');
+    expect(c.cityUserAgent).not.toMatch(/[@()]/);
+    expect(loadConfig({ ...base, CITY_USER_AGENT: 'ct/2' }, 'config').cityUserAgent).toBe('ct/2');
+  });
   it('HOST overrides the listen address', () => {
     expect(loadConfig({ ...base, HOST: '0.0.0.0' }, 'config').host).toBe('0.0.0.0');
   });

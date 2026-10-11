@@ -26,8 +26,10 @@ async function main() {
   const store = openStore(join(cfg.dataDir, 'chicago-tracker.db'));
   const cache = new DataCache(store);
   const nowLocal = () => chicagoNow();
-  const fetchJson = createFetchJson({ userAgent: cfg.nwsUserAgent });
-  const nws = createNws(fetchJson, cfg.nwsUserAgent);
+  // City ArcGIS/Socrata requests use a contact-free UA (see cityUserAgent). The geocoder sets
+  // its own Nominatim UA with the contact; NWS gets the contact UA as its API policy asks.
+  const fetchJson = createFetchJson({ userAgent: cfg.cityUserAgent });
+  const nws = createNws(createFetchJson({ userAgent: cfg.nwsUserAgent }), cfg.nwsUserAgent);
   const publish = (topic: string, p: Parameters<typeof publishNtfy>[3]) => publishNtfy(fetch, { url: cfg.ntfyUrl!, token: cfg.ntfyToken }, topic, p);
 
   const refreshNow = async () => {

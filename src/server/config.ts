@@ -25,7 +25,7 @@ export interface AppConfig {
   port: number; host: string; dataDir: string;
   ownerLogin: string; allowedLogins: string[]; singleUserLogin: string | null;
   publicBaseUrl: string; nominatimContact: string; socrataAppToken: string | null;
-  ntfyUrl: string | null; ntfyToken: string | null; nwsUserAgent: string; refreshCron: string;
+  ntfyUrl: string | null; ntfyToken: string | null; nwsUserAgent: string; cityUserAgent: string; refreshCron: string;
   datasets: DatasetsConfig; rates: RatesConfig; utilities: UtilitiesConfig; excluded311: string[];
 }
 
@@ -55,6 +55,9 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     ntfyUrl: (env.NTFY_URL ?? 'https://ntfy.sh').trim().replace(/\/$/, '') || null,
     ntfyToken: env.NTFY_TOKEN?.trim() || null,
     nwsUserAgent: env.NWS_USER_AGENT || `chicago-tracker (${contact})`,
+    // The City of Chicago CDN returns 403 for User-Agents that carry an email address, so city
+    // sources (ArcGIS, Socrata) get a contact-free UA. Nominatim and NWS keep the contact UA.
+    cityUserAgent: env.CITY_USER_AGENT?.trim() || 'chicago-tracker/0.1',
     refreshCron: env.REFRESH_CRON || '30 3 * * *',
     datasets: readJson<DatasetsConfig>(configDir, 'datasets.json'),
     rates: readJson<RatesConfig>(configDir, 'rates.json'),
