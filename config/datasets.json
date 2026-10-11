@@ -1,0 +1,26 @@
+{
+  "arcgisBase": "https://gisapps.cityofchicago.org/arcgis/rest/services/ExternalApps/operational/MapServer",
+  "socrataBase": "https://data.cityofchicago.org/resource",
+  "layers": { "payBlocks": 58, "payBoxes": 40, "cbd": 115, "snowRoutes": 50, "snowplows": 38, "parcels": 1 },
+  "socrata": {
+    "sweepSchedule": "u5ai-3efk",
+    "sweepZones": "2r7q-emq3",
+    "permitsClosures": "jdis-5sry",
+    "permitsCurrent": "hr8i-6s6s",
+    "permitsBlockParty": "9zhy-9n5f",
+    "permitsFilming": "c2az-nhru",
+    "specialEvents": "xgse-8eg7",
+    "permitZones": "u9xt-hiju",
+    "towed": "ygr5-vcbg",
+    "relocated": "5k2z-suxx",
+    "requests311": "v6vf-nfxy",
+    "snowRoutes": "i6k4-giaj"
+  },
+  "sweepingYear": 2026,
+  "snowRouteSource": "socrata:i6k4-giaj",
+  "snowRouteSourceNote": "Snow Route Parking Restrictions (144 segments, 609 mi, every row restrict_t = '2 INCH'); the city's 2-inch ban list. ArcGIS layer 50 'Main Snow Routes' is 1,815 mi of plow routes, not the ban. See docs/DATA-FACTS.md.",
+  "closureRedPattern": "^(full|curb|partial|intermit)",
+  "closureRedPatternNote": "streetclosure values on 2026-10-11: Curblane, Full, Partial, Intermitte, Sidewalk. Sidewalk never matches.",
+  "sundayHoursVerified": true,
+  "sundayHoursNote": "SUNDAY_HOURS=Y means meters are enforced on Sundays (Loop/CBD and the opt-out retail strips); N means free Sundays. See docs/DATA-FACTS.md."
+}

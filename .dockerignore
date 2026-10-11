@@ -1,0 +1,12 @@
+node_modules
+dist
+data
+.git
+test
+docs
+deploy
+scripts
+*.md
+*.env
+.env*
+.github

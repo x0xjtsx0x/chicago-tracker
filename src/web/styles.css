@@ -1,0 +1,48 @@
+:root {
+  --bg: #f6f7f9; --card: #ffffff; --text: #1b1f24; --muted: #5d6673; --border: #dde1e6;
+  --accent: #0b5394; --red: #d73027; --amber: #b86e00; --green: #1a7f45; --purple: #7b3fa0;
+  --radius: 12px; --tabs-h: 64px; color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #0f1216; --card: #181c22; --text: #e8ebef; --muted: #9aa4b1; --border: #2a3038; --accent: #5aa2e6; --amber: #f0a830; --green: #4cc17d; }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { padding: 16px 16px calc(var(--tabs-h) + 24px + env(safe-area-inset-bottom)); max-width: 1100px; margin: 0 auto; outline: none; }
+h1 { font-size: 1.4rem; margin: 4px 0 12px; } h2 { font-size: 1.1rem; margin: 0 0 8px; }
+.muted { color: var(--muted); } .small { font-size: .85rem; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 12px; }
+.card.red { border-left: 5px solid var(--red); } .card.amber { border-left: 5px solid var(--amber); } .card.green { border-left: 5px solid var(--green); }
+.banner { padding: 10px 14px; border-radius: var(--radius); margin-bottom: 12px; background: #fff4d6; color: #5a4300; }
+.banner.error { background: #fde2e1; color: #7a1712; }
+@media (prefers-color-scheme: dark) { .banner { background: #3a2f10; color: #f5dc9a; } .banner.error { background: #3d1614; color: #f7b4ae; } }
+button, .btn { min-height: 44px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--border); background: var(--card); color: var(--text); font: inherit; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; }
+.btn.primary, button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+input, select { min-height: 44px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--card); color: var(--text); font: inherit; width: 100%; }
+label { display: block; margin: 8px 0 4px; font-weight: 600; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; } .row > * { flex: 1 1 auto; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; margin: 6px 0; }
+.chip { padding: 4px 10px; border-radius: 999px; border: 1px solid var(--border); font-size: .85rem; background: var(--card); min-height: 32px; }
+.chip[aria-pressed="true"] { background: var(--accent); color: #fff; border-color: var(--accent); }
+.big { font-size: 1.6rem; font-weight: 700; }
+.list { list-style: none; margin: 0; padding: 0; } .list li { padding: 10px 0; border-bottom: 1px solid var(--border); }
+.dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+.map { height: 55vh; min-height: 320px; border-radius: var(--radius); border: 1px solid var(--border); margin: 8px 0 12px; }
+.search-results { position: relative; z-index: 1000; } .search-results button { width: 100%; justify-content: flex-start; margin-top: 4px; text-align: left; }
+.tabs { position: fixed; bottom: 0; left: 0; right: 0; height: calc(var(--tabs-h) + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom); display: flex; background: var(--card); border-top: 1px solid var(--border); z-index: 1100; }
+.tabs a { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--muted); text-decoration: none; font-size: .8rem; }
+.tabs a span { font-size: 1.3rem; } .tabs a[aria-current="page"] { color: var(--accent); font-weight: 700; }
+.sheet-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 2000; display: flex; align-items: flex-end; justify-content: center; }
+.sheet { background: var(--card); color: var(--text); width: 100%; max-width: 560px; max-height: 80vh; overflow: auto; border-radius: 16px 16px 0 0; padding: 20px 16px calc(20px + env(safe-area-inset-bottom)); position: relative; }
+.sheet-close { position: absolute; top: 8px; right: 8px; min-width: 44px; }
+.legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: .85rem; }
+@media (min-width: 900px) {
+  .tabs { top: 0; bottom: 0; right: auto; width: 96px; height: auto; flex-direction: column; justify-content: flex-start; padding-top: 16px; border-top: 0; border-right: 1px solid var(--border); }
+  .tabs a { flex: 0 0 80px; }
+  main { padding: 24px 24px 24px 120px; }
+  .sheet-backdrop { align-items: center; } .sheet { border-radius: 16px; }
+  .map { height: 70vh; }
+}
+label.row { font-weight: 400; flex-wrap: nowrap; justify-content: flex-start; }
+label.row > input[type="checkbox"] { flex: 0 0 auto; width: 24px; height: 24px; min-height: 0; margin: 10px 4px 10px 0; }
+label.row > :not(input) { flex: 0 1 auto; }

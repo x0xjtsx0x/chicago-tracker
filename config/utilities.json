@@ -1,0 +1,9 @@
+{
+  "tags": [
+    { "tag": "comed", "patterns": ["COMED", "COMMONWEALTH EDISON"] },
+    { "tag": "peoplesgas", "patterns": ["PEOPLES GAS"] },
+    { "tag": "water", "patterns": ["DWM", "WATER MANAGEMENT"] },
+    { "tag": "telecom", "patterns": ["AT&T", "SBC", "VERIZON", "COMCAST", "CROWN CASTLE", "T-MOBILE"] }
+  ],
+  "comedOutageUrl": "https://www.comed.com/outages"
+}
