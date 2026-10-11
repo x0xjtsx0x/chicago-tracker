@@ -68,8 +68,12 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   const root = deps.webRoot === undefined ? resolve('dist/web') : deps.webRoot;
   if (root && existsSync(root)) {
     await app.register(fastifyStatic, { root, wildcard: false });
+    // App-shell fallback only for extension-less GET paths. A missing file (e.g. an old hashed
+    // /assets/*.js after a deploy) must be a real 404, never HTML served under a script URL.
     app.setNotFoundHandler((req, reply) => {
-      if (req.method === 'GET' && !req.url.startsWith('/api/') && !req.url.startsWith('/cal/')) return reply.sendFile('index.html');
+      const path = req.url.split('?')[0];
+      const isFile = /\.[A-Za-z0-9]+$/.test(path);
+      if (req.method === 'GET' && !isFile && !path.startsWith('/api/') && !path.startsWith('/cal/')) return reply.sendFile('index.html');
       return reply.code(404).send({ error: 'Not found' });
     });
   }
