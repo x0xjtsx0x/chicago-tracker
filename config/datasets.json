@@ -1,0 +1,22 @@
+{
+  "arcgisBase": "https://gisapps.cityofchicago.org/arcgis/rest/services/ExternalApps/operational/MapServer",
+  "socrataBase": "https://data.cityofchicago.org/resource",
+  "layers": { "payBlocks": 58, "payBoxes": 40, "cbd": 115, "snowRoutes": 50, "snowplows": 38, "parcels": 1 },
+  "socrata": {
+    "sweepSchedule": "u5ai-3efk",
+    "sweepZones": "2r7q-emq3",
+    "permitsClosures": "jdis-5sry",
+    "permitsCurrent": "hr8i-6s6s",
+    "permitsBlockParty": "9zhy-9n5f",
+    "permitsFilming": "c2az-nhru",
+    "specialEvents": "xgse-8eg7",
+    "permitZones": "u9xt-hiju",
+    "towed": "ygr5-vcbg",
+    "relocated": "5k2z-suxx",
+    "requests311": "v6vf-nfxy"
+  },
+  "sweepingYear": 2026,
+  "snowRouteSource": "arcgis:50 (UNVERIFIED as 2-inch ban streets — see spec §2.1)",
+  "closureRedPattern": "full|curb|lane|partial|street",
+  "sundayHoursVerified": false
+}
