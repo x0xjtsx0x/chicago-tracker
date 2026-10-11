@@ -73,7 +73,7 @@ export function planPushes(inp: PlanInput): PlannedPush[] {
       out.push({
         key: banKey, category: 'snowban', priority: 'high', tags: ['snowflake'], click,
         title: `❄️ Possible 2-inch snow ban — ${pushLabel(place)}`,
-        message: `Forecast ~${status.snowNext24hIn} in. in the next 24h and your street is a snow route. Watch for the city's ban announcement.`,
+        message: `Forecast ~${status.snowNext24hIn} in. in the next 24h and your street is on the city's 2-inch snow ban list. Watch for the city's ban announcement.`,
       });
     }
   }

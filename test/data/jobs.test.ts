@@ -27,4 +27,15 @@ describe('buildDatasetJobs', () => {
     expect(jobs.find((j) => j.name === 'specialEvents')!.guard).toBe('windowed');
     for (const name of ['payBlocks', 'sweepSchedule', 'permitZones', 'snowRoutes']) expect(jobs.find((j) => j.name === name)!.guard).toBeUndefined();
   });
+  it('snow routes come from the Socrata 2-inch ban dataset (not ArcGIS layer 50) with a restriction filter', async () => {
+    const urls: string[] = [];
+    const jobs = buildDatasetJobs(cfg, async (u: string) => { urls.push(u); return []; }, '2026-10-11');
+    expect(cfg.datasets.snowRouteSource).toBe('socrata:i6k4-giaj');
+    await jobs.find((j) => j.name === 'snowRoutes')!.run();
+    const u = new URL(urls[0]);
+    expect(u.hostname).toBe('data.cityofchicago.org');
+    expect(u.pathname).toBe('/resource/i6k4-giaj.json');
+    expect(u.searchParams.get('$where')).toBe("restrict_t = '2 INCH'");
+    expect(u.searchParams.get('$select')).toContain('the_geom');
+  });
 });

@@ -25,6 +25,7 @@ const SOCRATA: [keyof typeof d.socrata, string[]][] = [
   ['towed', ['tow_date', 'plate', 'state', 'towed_to_address', 'tow_facility_phone', 'inventory_number']],
   ['relocated', ['relocated_date', 'plate', 'state', 'relocated_reason', 'relocated_to_street_name', 'service_request_number']],
   ['requests311', ['sr_number', 'sr_type', 'status', 'created_date', 'duplicate', 'latitude', 'longitude', 'location']],
+  ['snowRoutes', ['the_geom', 'on_street', 'restrict_t']],
 ];
 for (const [k, fields] of SOCRATA) {
   const v = await fj(`https://data.cityofchicago.org/api/views/${d.socrata[k]}.json`);
@@ -33,7 +34,7 @@ for (const [k, fields] of SOCRATA) {
 const LAYERS: [keyof typeof d.layers, string[]][] = [
   ['payBlocks', ['BLOCK_ID', 'STREET_NAME', 'BLOCK_START', 'BLOCK_END', 'NUM_SPACES', 'HOUR_LIMIT', 'PAY_AREA', 'SUNDAY_HOURS']],
   ['payBoxes', ['TERMINAL_ID', 'STREET_NAME', 'HOUR_LIMIT', 'PAY_AREA']],
-  ['cbd', ['NAME']], ['snowRoutes', ['SNOW_RTE']], ['snowplows', ['ASSET_NAME', 'ASSET_TYPE', 'POSTING_TIME']],
+  ['cbd', ['NAME']], ['snowplows', ['ASSET_NAME', 'ASSET_TYPE', 'POSTING_TIME']],
   ['parcels', ['L_ADDR', 'H_ADDR', 'PRE_DIR', 'ST_NAME', 'ST_TYPE']],
 ];
 for (const [k, fields] of LAYERS) {

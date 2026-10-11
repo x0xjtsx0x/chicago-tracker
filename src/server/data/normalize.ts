@@ -44,6 +44,15 @@ export function normSnowRoute(f: ArcFeature): SnowRoute {
   return { id: String(f.attributes.SNOW_RTE ?? f.attributes.OBJECTID), paths, bbox: bboxOf(paths.flat()) };
 }
 
+/** Socrata "Snow Route Parking Restrictions" (i6k4-giaj): the_geom is a (Multi)LineString per street segment. */
+export function normSnowRouteRow(row: any): SnowRoute | null {
+  const g = row.the_geom;
+  if (!g?.coordinates) return null;
+  const paths: LngLat[][] = g.type === 'LineString' ? [g.coordinates] : g.coordinates;
+  if (!paths.length) return null;
+  return { id: `${row.objectid ?? ''}:${row.on_street ?? ''}`, paths, bbox: bboxOf(paths.flat()) };
+}
+
 export function normParcel(f: ArcFeature): Parcel | null {
   const ring = f.geometry?.rings?.[0] as LngLat[] | undefined;
   const a = f.attributes;

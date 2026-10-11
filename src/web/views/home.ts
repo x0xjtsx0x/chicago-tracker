@@ -42,7 +42,7 @@ export async function renderHome(root: HTMLElement): Promise<void> {
     for (const w of winter) {
       root.append(h('div', { class: `card ${w.possibleBan || w.alerts.length ? 'amber' : ''}` },
         h('h2', null, `❄️ Winter — ${w.label}`),
-        h('p', null, w.onSnowRoute ? 'Your street is a snow route (2-inch ban may apply).' : 'Not on a main snow route.'),
+        h('p', null, w.onSnowRoute ? 'Your street is on the city’s 2-inch snow ban list.' : 'Not on the city’s 2-inch snow ban list.'),
         w.possibleBan ? h('p', null, h('strong', null, `Possible 2-inch snow ban: ~${w.snowNext24hIn} in. forecast in 24h.`)) : null,
         ...w.alerts.map((a) => h('p', null, h('strong', null, a.event), ` — ${a.headline}`)),
         h('p', { class: 'muted small' }, w.error ? `Last check failed (${w.checkedAt ?? 'never'})` : `Checked ${w.checkedAt?.slice(11, 16) ?? '—'}`)));

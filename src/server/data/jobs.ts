@@ -25,7 +25,11 @@ export function buildDatasetJobs(cfg: AppConfig, fetchJson: FetchJson, today: st
     { name: 'payBlocks', run: async () => list((await arc(d.layers.payBlocks)).map(N.normPayBlock)) },
     { name: 'payBoxes', run: async () => list((await arc(d.layers.payBoxes)).map(N.normPayBox)) },
     { name: 'cbd', run: async () => { const mp = N.normCbd(await arc(d.layers.cbd)); return { rows: mp, count: mp ? 1 : 0 }; } },
-    { name: 'snowRoutes', run: async () => list((await arc(d.layers.snowRoutes)).map(N.normSnowRoute)) },
+    // The 2-inch snow ban streets. docs/DATA-FACTS.md: the Socrata restriction dataset is the ban
+    // list; ArcGIS layer 50 "Main Snow Routes" is the much larger plow-route network.
+    { name: 'snowRoutes', run: async () => d.snowRouteSource.startsWith('socrata:')
+      ? list((await soc(d.socrata.snowRoutes, { select: 'objectid,on_street,from_stree,to_street,restrict_t,the_geom', where: "restrict_t = '2 INCH'" })).map(N.normSnowRouteRow).filter((r) => r !== null))
+      : list((await arc(d.layers.snowRoutes)).map(N.normSnowRoute)) },
     { name: 'sweepSchedule', run: async () => list((await soc(d.socrata.sweepSchedule)).map(N.normSweepRow)) },
     { name: 'sweepZones', run: async () => list((await soc(d.socrata.sweepZones)).map(N.normSweepZone).filter((z) => z !== null)) },
     { name: 'permitZones', run: async () => list((await soc(d.socrata.permitZones, { where: "status = 'ACTIVE'" })).map(N.normPermitZone).filter((z) => z !== null)) },

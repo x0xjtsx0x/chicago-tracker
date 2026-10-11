@@ -55,3 +55,15 @@ describe('normalizers', () => {
       .toEqual({ low: 706, high: 706, dir: 'W', name: 'RANDOLPH', type: 'ST', centroid: [1, 1] });
   });
 });
+
+describe('normSnowRouteRow (Socrata i6k4-giaj)', () => {
+  it('maps LineString and MultiLineString geometry to paths with a bbox, skips rows without geometry', () => {
+    const multi = N.normSnowRouteRow({ objectid: '1', on_street: 'W 111TH ST', restrict_t: '2 INCH', the_geom: { type: 'MultiLineString', coordinates: [[[-87.66, 41.69], [-87.65, 41.69]], [[-87.65, 41.69], [-87.64, 41.70]]] } })!;
+    expect(multi.id).toBe('1:W 111TH ST');
+    expect(multi.paths).toHaveLength(2);
+    expect(multi.bbox).toEqual([-87.66, 41.69, -87.64, 41.70]);
+    const single = N.normSnowRouteRow({ objectid: '2', on_street: 'X', the_geom: { type: 'LineString', coordinates: [[-87.6, 41.8], [-87.5, 41.8]] } })!;
+    expect(single.paths).toEqual([[[-87.6, 41.8], [-87.5, 41.8]]]);
+    expect(N.normSnowRouteRow({ objectid: '3', on_street: 'Y' })).toBeNull();
+  });
+});
