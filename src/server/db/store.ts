@@ -47,10 +47,11 @@ export function openStore(file: string) {
 
   const store = {
     upsertUser(login: string, name: string): User {
-      const existing = db.prepare('SELECT * FROM users WHERE login = ?').get(login);
+      const existing = db.prepare('SELECT * FROM users WHERE login = ?').get(login) as any;
       if (existing) {
-        db.prepare('UPDATE users SET name = ? WHERE login = ?').run(name, login);
-        return toUser({ ...(existing as object), name });
+        // Called on every authenticated request: only write when the name actually changed.
+        if (existing.name !== name) db.prepare('UPDATE users SET name = ? WHERE login = ?').run(name, login);
+        return toUser({ ...existing, name });
       }
       const info = db.prepare('INSERT INTO users (login, name, cal_token, ntfy_topic, notify_prefs) VALUES (?,?,?,?,?)')
         .run(login, name, randomToken(24), randomTopic(), JSON.stringify(DEFAULT_NOTIFY_PREFS));

@@ -4,3 +4,9 @@ data
 .git
 test
 docs
+deploy
+scripts
+*.md
+*.env
+.env*
+.github
